@@ -1,6 +1,7 @@
-from marshmallow import Schema, fields
+from ams.conf import ma
+from ams.models import Salesperson
 
 
-class SalespersonSchema(Schema):
-    id = fields.Number()
-    person_id = fields.Number()
+class SalespersonSchema(ma.ModelSchema):
+    class Meta:
+        model = Salesperson

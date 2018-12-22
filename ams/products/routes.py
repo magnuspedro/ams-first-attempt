@@ -18,9 +18,9 @@ def get_product():
 
 @products.route("/product", methods=['POST'])
 def register_product():
-    posted_product = schema.ProductSchema().load(request.get_json())
+    posted_product = schema.ProductSchema().load(request.get_json(), session=db.session)
 
-    product = Product(**posted_product.data)
+    product = posted_product.data
 
     db.session.add(product)
     db.session.commit()

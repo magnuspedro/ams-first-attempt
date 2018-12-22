@@ -29,16 +29,16 @@ class Person(db.Model, UserMixin):
 
 class Salesperson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('person.id', ondelete='CASCADE'), nullable=False)
+    person_id = db.Column(db.Integer, db.ForeignKey('person.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     sales = db.relationship('Sales', backref=db.backref('salesperson_sales'), lazy='joined')
     distributions = db.relationship('Distributions', backref=db.backref('sales_distributions'), lazy='dynamic')
 
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('person.id', ondelete='CASCADE'), nullable=False)
+    person_id = db.Column(db.Integer, db.ForeignKey('person.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     sales = db.relationship('Sales', backref=db.backref('student_sales'), lazy='joined')
-    team = db.relationship('Team', backref=db.backref('student_team'), lazy='dynamic')
+    team = db.relationship('Modality', secondary='team', backref=db.backref('student_team'), lazy='dynamic')
 
 
 class Product(db.Model):
@@ -48,27 +48,28 @@ class Product(db.Model):
     amount = db.Column(db.Float, nullable=False)
     size = db.Column(db.String(15), nullable=False)
     color = db.Column(db.String(15), nullable=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id', ondelete='CASCADE'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     bought = db.relationship('Bought', uselist=False, backref=db.backref('product_bought'), lazy='joined')
     sell = db.relationship('Sell', uselist=False, backref=db.backref('product_sell'), lazy='joined')
 
 
 class Bought(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    date = db.Column(db.Date, nullable=False)
 
 
 class Sell(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float, nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
 
 
 class Transaction(db.Model):
     amount = db.Column(db.Float, nullable=False)
-    sell_id = db.Column(db.Integer, db.ForeignKey('sell.id', ondelete='CASCADE'), primary_key=True)
-    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE'), primary_key=True)
+    sell_id = db.Column(db.Integer, db.ForeignKey('sell.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
     sell = db.relationship('Sell', backref=db.backref('transaction_sell'), lazy='joined')
 
 
@@ -91,11 +92,12 @@ class Sales(db.Model):
     value = db.Column(db.Float, nullable=False)
     discount = db.Column(db.Float, nullable=True)
     date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id', ondelete='CASCADE'), nullable=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), nullable=True)
-    salesperson_id = db.Column(db.Integer, db.ForeignKey('salesperson.id', ondelete='CASCADE'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=True)
+    modality_id = db.Column(db.Integer, db.ForeignKey('modality.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=True)
+    salesperson_id = db.Column(db.Integer, db.ForeignKey('salesperson.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     transaction = db.relationship('Transaction', backref=db.backref('sales_transaction'), lazy='dynamic')
-    taxes = db.relationship('Taxes', backref=db.backref('sales_taxes'), lazy='joined')
+    taxes = db.relationship('Taxes', uselist=False, backref=db.backref('sales_taxes'), lazy='joined')
     shipping = db.relationship('Shipping', backref=db.backref('sales_shipping'), lazy='dynamic')
 
     # def __repr__(self):
@@ -106,7 +108,7 @@ class Sales(db.Model):
 class Taxes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     percentage = db.Column(db.Float, default=0.0, nullable=False)
-    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE'), nullable=False)
+    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
 
 
 class Modality(db.Model):
@@ -114,24 +116,20 @@ class Modality(db.Model):
     name = db.Column(db.String(20), nullable=False)
     fee = db.Column(db.Float, default=0.0, nullable=False)
     sex = db.Column(db.String(1), nullable=False)
+    sales = db.relationship('Sales', backref=db.backref('modality_sales'), lazy='joined')
 
 
-class Team(db.Model):
-    student_id = db.Column(db.Integer, db.ForeignKey(
-        'student.id', ondelete='CASCADE'), primary_key=True, nullable=False)
-    modality_id = db.Column(db.Integer, db.ForeignKey(
-        'modality.id', ondelete='CASCADE'), primary_key=True, nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    modality = db.relationship('Modality', backref=db.backref('team_modality'), lazy='joined')
+team = db.Table('team',
+                db.Column('student_id', db.Integer, db.ForeignKey('student.id', ondelete='CASCADE', onupdate='CASCADE')),
+                db.Column('modality_id', db.Integer, db.ForeignKey('modality.id', ondelete='CASCADE', onupdate='CASCADE'))
+                )
 
 
 competition = db.Table('competition',
                        db.Column('event_id', db.Integer,
-                                 db.ForeignKey('event.id', ondelete='CASCADE')),
+                                 db.ForeignKey('event.id', ondelete='CASCADE', onupdate='CASCADE')),
                        db.Column('modality_id', db.Integer,
-                                 db.ForeignKey('modality.id', ondelete='CASCADE')))
-
-# Until here alles gut but ticket still giving me headche
+                                 db.ForeignKey('modality.id', ondelete='CASCADE', onupdate='CASCADE')))
 
 
 class Ticket(db.Model):
@@ -141,15 +139,15 @@ class Ticket(db.Model):
     amount = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     lot = db.Column(db.String(20), nullable=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id', ondelete='CASCADE'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     distributions = db.relationship('Distributions', backref=db.backref('ticket_distributions'), lazy='dynamic')
     sales = db.relationship('Sales', backref=db.backref('ticket_sales'), lazy='joined')
 
 
 class Shipping(db.Model):
     amount = db.Column(db.Integer, nullable=False)
-    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE'), primary_key=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), primary_key=True)
+    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
 
     ticket = db.relationship('Ticket', backref=db.backref('shipping_ticket'), lazy='joined')
 
@@ -157,5 +155,5 @@ class Shipping(db.Model):
 class Distributions(db.Model):
     amount_given = db.Column(db.Integer, nullable=False)
     amount_sold = db.Column(db.Integer, nullable=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), primary_key=True)
-    salesperson_id = db.Column(db.Integer, db.ForeignKey('salesperson.id', ondelete='CASCADE'), primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+    salesperson_id = db.Column(db.Integer, db.ForeignKey('salesperson.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)

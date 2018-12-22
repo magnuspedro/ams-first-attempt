@@ -1,11 +1,9 @@
-from marshmallow import Schema, fields
+from ams.models import Sales
+from ams.config import ma
 
 
-class SalesSchema(Schema):
-    id = fields.Number()
-    value = fields.Float()
-    discount = fields.Float()
-    taxes_id = fields.Float()
-    student_id = fields.Number()
-    salesperson_id = fields.Number()
-    ticket_id = fields.Number()
+class SalesSchema(ma.ModelSchema):
+    class Meta:
+        model = Sales
+        # Make FK work in the JSON
+        include_fk = True

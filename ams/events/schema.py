@@ -1,9 +1,7 @@
-from marshmallow import Schema, fields
+from ams.config import ma
+from ams.models import Event
 
 
-class EventSchema(Schema):
-    id = fields.Number()
-    name = fields.Str()
-    starting_date = fields.Date()
-    ending_date = fields.Date()
-    price = fields.Float()
+class EventSchema(ma.ModelSchema):
+    class Meta:
+        model = Event

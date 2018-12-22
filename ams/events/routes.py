@@ -18,9 +18,9 @@ def get_event():
 
 @events.route("/event", methods=['POST'])
 def register_event():
-    posted_event = schema.EventSchema().load(request.get_json())
+    posted_event = schema.EventSchema().load(request.get_json(), session=db.session)
 
-    event = Event(**posted_event.data)
+    event = posted_event.data
 
     db.session.add(event)
     db.session.commit()

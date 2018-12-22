@@ -1,8 +1,7 @@
-from marshmallow import Schema, fields
+from ams.models import Modality
+from ams.config import ma
 
 
-class ModalitySchema(Schema):
-    id = fields.Number()
-    name = fields.Str()
-    fee = fields.Float()
-    sex = fields.Str()
+class ModalitySchema(ma.ModelSchema):
+    class Meta:
+        model = Modality

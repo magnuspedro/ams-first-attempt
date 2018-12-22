@@ -18,9 +18,9 @@ def get_modality():
 
 @modalities.route("/modality", methods=['POST'])
 def register_modality():
-    posted_modality = schema.ModalitySchema().load(request.get_json())
+    posted_modality = schema.ModalitySchema().load(request.get_json(), session=db.session)
 
-    modality = Modality(**posted_modality.data)
+    modality = posted_modality.data
 
     db.session.add(modality)
     db.session.commit()

@@ -1,9 +1,8 @@
-from marshmallow_sqlalchemy import ModelSchema
-from ams.config import ma
+from ams.config import ma, db
 from ams.models import Person
-from ams.student.schema import StudentSchema
 
 
-class PersonSchema(ModelSchema):
+class PersonSchema(ma.ModelSchema):
     class Meta:
         model = Person
+        sqla_session = db.session

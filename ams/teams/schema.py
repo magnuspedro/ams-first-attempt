@@ -1,7 +1,7 @@
-from marshmallow import Schema, fields
+from ams.config import ma
+from ams.models import Team
 
 
-class TeamsSchema(Schema):
-    id = fields.Number()
-    student_id = fields.Number()
-    modality_id = fields.Number()
+class TeamsSchema(ma.ModelSchema):
+    class Meta:
+        model = Team
